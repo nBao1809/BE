@@ -92,10 +92,6 @@ public class OrderDetailService {
     public KitchenOrderDetailDTO updateQuantityAndStatus(Long orderDetailId, Integer quantity, String status) {
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết đơn hàng với id: " + orderDetailId));
-        // Chỉ cho phép cập nhật nếu trạng thái hiện tại là TODO
-        if (!"TODO".equals(orderDetail.getStatus())) {
-            throw new IllegalStateException("Chỉ được cập nhật khi trạng thái là TODO");
-        }
         if (quantity != null) {
             if (quantity < 0) {
                 throw new IllegalArgumentException("Số lượng phải lớn hơn hoặc bằng 0");

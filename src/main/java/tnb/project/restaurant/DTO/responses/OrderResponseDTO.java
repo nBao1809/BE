@@ -17,6 +17,5 @@ public class OrderResponseDTO {
     private LocalDateTime createdAt;
     private String status;
     private List<OrderDetailResponseDTO> orderDetails;
-
 }
 

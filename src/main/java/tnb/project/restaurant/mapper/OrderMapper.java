@@ -1,6 +1,7 @@
 package tnb.project.restaurant.mapper;
 
 import tnb.project.restaurant.DTO.responses.OrderResponseDTO;
+import tnb.project.restaurant.entities.Dish;
 import tnb.project.restaurant.entities.Orders;
 import tnb.project.restaurant.DTO.responses.OrderDetailResponseDTO;
 import tnb.project.restaurant.entities.OrderDetail;

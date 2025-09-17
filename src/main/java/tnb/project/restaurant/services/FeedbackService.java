@@ -1,8 +1,11 @@
 package tnb.project.restaurant.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import tnb.project.restaurant.DTO.FeedbackRequestDTO;
 import tnb.project.restaurant.DTO.FeedbackResponseDTO;
+import tnb.project.restaurant.DTO.PageResponse;
 import tnb.project.restaurant.entities.Feedback;
 import tnb.project.restaurant.entities.Session;
 import tnb.project.restaurant.mapper.FeedbackMapper;
@@ -68,5 +71,16 @@ public class FeedbackService {
             throw new IllegalArgumentException("Không tìm thấy phản hồi với id: " + feedbackId);
         }
         feedbackRepo.deleteById(feedbackId);
+    }
+
+    public PageResponse<FeedbackResponseDTO> getFeedbacksPage(Integer page, Integer size) {
+        if (page != null && size != null) {
+            Page<Feedback> feedbackPage = feedbackRepo.findAll(PageRequest.of(page, size));
+            List<FeedbackResponseDTO> content = feedbackPage.getContent().stream().map(FeedbackMapper::toDTO).toList();
+            return new PageResponse<>(content, feedbackPage.getNumber(), feedbackPage.getSize(), feedbackPage.getTotalElements(), feedbackPage.getTotalPages());
+        } else {
+            List<FeedbackResponseDTO> content = feedbackRepo.findAll().stream().map(FeedbackMapper::toDTO).toList();
+            return new PageResponse<>(content, 0, content.size(), content.size(), 1);
+        }
     }
 }

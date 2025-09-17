@@ -33,7 +33,7 @@ public class ServiceRequestService {
     }
 
     public List<ServiceRequest> getServiceRequests() {
-        return serviceRequestRepository.findAll();
+        return serviceRequestRepository.findAll().stream().filter(s -> !s.getStatus().equals("COMPLETED")).collect(Collectors.toList());
     }
 
     public ServiceRequest getServiceRequest(String serviceRequestId) {
@@ -100,7 +100,7 @@ public class ServiceRequestService {
     }
 
     public List<ServiceResponseDTO> getServiceRequestDTOs() {
-        return serviceRequestRepository.findAll().stream()
+        return serviceRequestRepository.findAll().stream().filter(s -> !s.getStatus().equals("COMPLETED"))
             .map(ServiceRequestMapper::toDTO)
             .collect(Collectors.toList());
     }
@@ -111,10 +111,10 @@ public class ServiceRequestService {
         return ServiceRequestMapper.toDTO(serviceRequest);
     }
 
-    public ServiceResponseDTO handleRequest(Long serviceRequestId, String status) {
+    public ServiceResponseDTO handleRequest(Long serviceRequestId) {
         ServiceRequest serviceRequest = serviceRequestRepository.findById(serviceRequestId)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu dịch vụ với id: " + serviceRequestId));
-        serviceRequest.setStatus(status);
+        serviceRequest.setStatus("COMPLETED");
         serviceRequest.setHandleTime(LocalDateTime.now());
         ServiceRequest updatedRequest = serviceRequestRepository.save(serviceRequest);
         // Gửi thông báo qua WebSocket khi xử lý yêu cầu dịch vụ
@@ -129,4 +129,5 @@ public class ServiceRequestService {
             .map(ServiceRequestMapper::toDTO)
             .collect(Collectors.toList());
     }
+
 }

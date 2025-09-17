@@ -19,7 +19,7 @@ public class ServiceRequestController {
         this.serviceRequestService = serviceRequestService;
     }
 
-    @GetMapping
+    @GetMapping("/unhandled")
     ResponseEntity<List<ServiceResponseDTO>> getServiceRequests() {
         List<ServiceResponseDTO> serviceRequests = serviceRequestService.getServiceRequestDTOs();
         return ResponseEntity.ok(serviceRequests);
@@ -37,11 +37,10 @@ public class ServiceRequestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdServiceRequest);
     }
 
-    @PatchMapping("/{serviceRequestId}/handle")
+    @PostMapping("/{serviceRequestId}/handle")
     public ResponseEntity<ServiceResponseDTO> handleServiceRequest(
-            @PathVariable Long serviceRequestId,
-            @RequestBody UpdateStatusDTO updateStatusDTO) {
-        ServiceResponseDTO dto = serviceRequestService.handleRequest(serviceRequestId, updateStatusDTO.getStatus());
+            @PathVariable Long serviceRequestId) {
+        ServiceResponseDTO dto = serviceRequestService.handleRequest(serviceRequestId);
         return ResponseEntity.ok(dto);
     }
 

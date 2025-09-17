@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import tnb.project.restaurant.DTO.CreateCustomerRequest;
 import tnb.project.restaurant.entities.Customer;
 import tnb.project.restaurant.services.CustomerService;
 
@@ -20,9 +21,13 @@ public class CustomerController {
     }
 
     @GetMapping
-    ResponseEntity<List<Customer>> getCustomers() {
-        List<Customer> customers = customerService.getCustomers();
-        return ResponseEntity.ok(customers);
+    ResponseEntity<?> getCustomers(@RequestParam(value = "page", required = false) Integer page,
+                                   @RequestParam(value = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            return ResponseEntity.ok(customerService.getCustomersPage(page, size));
+        } else {
+            return ResponseEntity.ok(customerService.getCustomers());
+        }
     }
 
     @GetMapping("/{customerId}")
@@ -32,8 +37,8 @@ public class CustomerController {
     }
 
     @PostMapping
-    ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        Customer createdCustomer = customerService.createCustomer(customer);
+    ResponseEntity<Customer> createCustomer(@RequestBody CreateCustomerRequest request) {
+        Customer createdCustomer = customerService.createCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
     }
 

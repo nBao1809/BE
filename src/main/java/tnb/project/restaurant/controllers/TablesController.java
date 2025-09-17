@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tnb.project.restaurant.DTO.CreateTableRequest;
+import tnb.project.restaurant.DTO.UpdateTableRequest;
 import tnb.project.restaurant.entities.Tables;
 import tnb.project.restaurant.services.TablesService;
 import java.util.List;
@@ -30,14 +32,14 @@ public class TablesController {
     }
 
     @PostMapping
-    ResponseEntity<Tables> createTable(@RequestBody Tables table) {
-        Tables createdTable = tablesService.createTable(table);
+    ResponseEntity<Tables> createTable(@RequestBody CreateTableRequest request) {
+        Tables createdTable = tablesService.createTable(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTable);
     }
 
     @PatchMapping("/{tableId}")
-    ResponseEntity<Tables> updateTable(@PathVariable Long tableId, @RequestBody Tables table) {
-        Tables updatedTable = tablesService.updateTable(tableId, table);
+    ResponseEntity<Tables> updateTable(@PathVariable Long tableId, @RequestBody UpdateTableRequest request) {
+        Tables updatedTable = tablesService.updateTable(tableId,request);
         return ResponseEntity.ok(updatedTable);
     }
 

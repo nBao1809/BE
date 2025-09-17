@@ -12,35 +12,5 @@ public class FeedbackResponseDTO {
     private String content;
     private String createdAt;
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getSessionId() {
-        return sessionId;
-    }
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
-    public Integer getRating() {
-        return rating;
-    }
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-    public String getContent() {
-        return content;
-    }
-    public void setContent(String content) {
-        this.content = content;
-    }
-    public String getCreatedAt() {
-        return createdAt;
-    }
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
 }
 

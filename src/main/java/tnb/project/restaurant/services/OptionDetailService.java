@@ -1,6 +1,7 @@
 package tnb.project.restaurant.services;
 
 import org.springframework.stereotype.Service;
+import tnb.project.restaurant.DTO.OptionDetailDTO;
 import tnb.project.restaurant.entities.OptionDetail;
 import tnb.project.restaurant.repositorires.OptionDetailRepository;
 import tnb.project.restaurant.entities.OptionType;
@@ -27,31 +28,38 @@ public class OptionDetailService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tuỳ chọn chi tiết với id: " + optionDetailId));
     }
 
-    public OptionDetail createOptionDetail(OptionDetail optionDetail) {
-        if (optionDetail.getOptionType() == null || optionDetail.getOptionType().getId() == null) {
+    public OptionDetail createOptionDetail(OptionDetailDTO optionDetailDTO) {
+        if (optionDetailDTO.getOptionTypeId() == null) {
             throw new IllegalArgumentException("Phải chọn loại tuỳ chọn");
         }
-        if (optionDetail.getContent() == null || optionDetail.getContent().trim().isEmpty()) {
+        if (optionDetailDTO.getContent() == null || optionDetailDTO.getContent().trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung tuỳ chọn không được để trống");
         }
-        if (optionDetailRepo.findByContentAndOptionTypeId_Id(optionDetail.getContent(), optionDetail.getOptionType().getId()).isPresent()) {
+        if (optionDetailRepo.findByContentAndOptionTypeId_Id(optionDetailDTO.getContent(), optionDetailDTO.getOptionTypeId()).isPresent()) {
             throw new IllegalArgumentException("Nội dung tuỳ chọn đã tồn tại trong loại tuỳ chọn này");
         }
-        OptionType optionType = optionTypeRepo.findById(optionDetail.getOptionType().getId())
+        OptionType optionType = optionTypeRepo.findById(optionDetailDTO.getOptionTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại tuỳ chọn"));
+        OptionDetail optionDetail = new OptionDetail();
         optionDetail.setOptionType(optionType);
+        optionDetail.setContent(optionDetailDTO.getContent());
         return optionDetailRepo.save(optionDetail);
     }
 
-    public OptionDetail updateOptionDetail(Long optionDetailId, OptionDetail optionDetail) {
+    public OptionDetail updateOptionDetail(Long optionDetailId, OptionDetailDTO optionDetailDTO) {
         OptionDetail existing = optionDetailRepo.findById(optionDetailId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tuỳ chọn chi tiết với id: " + optionDetailId));
-        if (optionDetail.getContent() != null && !optionDetail.getContent().trim().isEmpty()) {
-            if (optionDetailRepo.findByContentAndOptionTypeId_Id(optionDetail.getContent(), existing.getOptionType().getId())
-                    .filter(od -> !od.getId().equals(optionDetailId)).isPresent()) {
+        if (optionDetailDTO.getContent() != null && !optionDetailDTO.getContent().trim().isEmpty()) {
+            if (optionDetailRepo.findByContentAndOptionTypeId_Id(optionDetailDTO.getContent(), existing.getOptionType().getId())
+                .isPresent()) {
                 throw new IllegalArgumentException("Nội dung tuỳ chọn đã tồn tại trong loại tuỳ chọn này");
             }
-            existing.setContent(optionDetail.getContent());
+            existing.setContent(optionDetailDTO.getContent());
+        }
+        if (optionDetailDTO.getOptionTypeId() != null) {
+            OptionType optionType = optionTypeRepo.findById(optionDetailDTO.getOptionTypeId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại tuỳ chọn"));
+            existing.setOptionType(optionType);
         }
         return optionDetailRepo.save(existing);
     }

@@ -20,9 +20,13 @@ public class EmployeeController {
     }
 
     @GetMapping
-    ResponseEntity<List<EmployeeDTO>> getEmployees() {
-        List<EmployeeDTO> employees = employeeService.getEmployees();
-        return ResponseEntity.ok(employees);
+    ResponseEntity<?> getEmployees(@RequestParam(value = "page", required = false) Integer page,
+                                   @RequestParam(value = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            return ResponseEntity.ok(employeeService.getEmployeesPage(page, size));
+        } else {
+            return ResponseEntity.ok(employeeService.getEmployees());
+        }
     }
 
     @GetMapping("/{employeeId}")

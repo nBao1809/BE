@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SessionNotifyRequestDTO {
+    Long tableId;
     private String sessionId;
     private String paymentMethod;
 }

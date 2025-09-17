@@ -5,8 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OptionDetailDTO {
-    private Long optionTypeId;
-    private String content;
+public class CreateCustomerRequest {
+    private String name;
+    private String phone;
 }
 

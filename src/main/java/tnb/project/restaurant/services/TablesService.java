@@ -1,6 +1,8 @@
 package tnb.project.restaurant.services;
 
 import org.springframework.stereotype.Service;
+import tnb.project.restaurant.DTO.CreateTableRequest;
+import tnb.project.restaurant.DTO.UpdateTableRequest;
 import tnb.project.restaurant.entities.Tables;
 import tnb.project.restaurant.repositorires.TablesRepository;
 
@@ -23,30 +25,33 @@ public class TablesService {
                 .orElseThrow(() -> new RuntimeException("Table not found"));
     }
 
-    public Tables createTable(Tables table) {
-        if (table.getNumber() == null || table.getNumber() <= 0) {
+    public Tables createTable(CreateTableRequest request) {
+        Integer number = request.getNumber();
+        if (number == null || number <= 0) {
             throw new IllegalArgumentException("Số bàn phải lớn hơn 0");
         }
-        if (tablesRepo.findAll().stream().anyMatch(t -> t.getNumber().equals(table.getNumber()))) {
+        if (tablesRepo.findAll().stream().anyMatch(t -> t.getNumber().equals(number))) {
             throw new IllegalArgumentException("Số bàn đã tồn tại");
         }
-        if (table.getStatus() == null || table.getStatus().trim().isEmpty()) {
-            throw new IllegalArgumentException("Trạng thái bàn không được để trống");
-        }
+        Tables table = new Tables();
+        table.setNumber(number);
+        table.setStatus("AVAILABLE"); // BE tự tạo status mặc định
         return tablesRepo.save(table);
     }
 
-    public Tables updateTable(Long tableId, Tables table) {
+    public Tables updateTable(Long tableId, UpdateTableRequest request) {
         Tables existing = tablesRepo.findById(tableId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bàn với id: " + tableId));
-        if (table.getNumber() != null && table.getNumber() > 0) {
-            if (tablesRepo.findAll().stream().anyMatch(t -> t.getNumber().equals(table.getNumber()) && !t.getId().equals(tableId))) {
+        Integer number = request.getNumber();
+        String status = request.getStatus();
+        if (number != null && number > 0) {
+            if (tablesRepo.findAll().stream().anyMatch(t -> t.getNumber().equals(number) && !t.getId().equals(tableId))) {
                 throw new IllegalArgumentException("Số bàn đã tồn tại");
             }
-            existing.setNumber(table.getNumber());
+            existing.setNumber(number);
         }
-        if (table.getStatus() != null && !table.getStatus().trim().isEmpty()) {
-            existing.setStatus(table.getStatus());
+        if (status != null && !status.trim().isEmpty()) {
+            existing.setStatus(status);
         }
         return tablesRepo.save(existing);
     }

@@ -1,7 +1,11 @@
 package tnb.project.restaurant.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import tnb.project.restaurant.DTO.PageResponse;
 import tnb.project.restaurant.DTO.requests.OrderDetailRequestDTO;
 import tnb.project.restaurant.DTO.requests.OrderRequestDTO;
 import tnb.project.restaurant.DTO.responses.KitchenOrderDetailDTO;
@@ -97,8 +101,8 @@ public class OrdersService {
             String optionNote = "";
             if (detailDTO.getOptionDetailIds() != null && !detailDTO.getOptionDetailIds().isEmpty()) {
                 List<String> optionContents = new ArrayList<>();
-                for (String optId : detailDTO.getOptionDetailIds()) {
-                    OptionDetail option = optionDetailRepository.findById(Long.valueOf(optId))
+                for (Long optId : detailDTO.getOptionDetailIds()) {
+                    OptionDetail option = optionDetailRepository.findById(optId)
                             .orElseThrow(() -> new RuntimeException("Option not found: " + optId));
                     optionContents.add(option.getContent());
                 }
@@ -118,7 +122,7 @@ public class OrdersService {
         order.setTotalAmount(amount);
         Orders savedOrder = ordersRepository.save(order);
         for (OrderDetail detail : savedDetails) {
-            detail.setStatus("PENDING");
+            detail.setStatus("PREPARING");
             detail.setOrder(savedOrder);
             orderDetailRepository.save(detail);
         }
@@ -143,7 +147,24 @@ public class OrdersService {
             return OrderMapper.mapOrderToDTO(order, details);
         }).collect(Collectors.toList());
     }
-
+    public PageResponse<OrderResponseDTO> getOrderPageDTOs(Integer page, Integer size) {
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Orders> ordersPage = ordersRepository.findAll(pageable);
+            List<String> orderIds = ordersPage.getContent().stream().map(Orders::getId).collect(Collectors.toList());
+            List<OrderDetail> allDetails = orderDetailRepository.findByOrderIdIn(orderIds);
+            Map<String, List<OrderDetail>> detailsByOrderId = allDetails.stream()
+                .collect(Collectors.groupingBy(od -> od.getOrder().getId()));
+            List<OrderResponseDTO> content = ordersPage.getContent().stream().map(order -> {
+                List<OrderDetail> details = detailsByOrderId.getOrDefault(order.getId(), List.of());
+                return OrderMapper.mapOrderToDTO(order, details);
+            }).toList();
+            return new PageResponse<>(content, ordersPage.getNumber(), ordersPage.getSize(), ordersPage.getTotalElements(), ordersPage.getTotalPages());
+        } else {
+            List<OrderResponseDTO> content = getOrderDTOs();
+            return new PageResponse<>(content, 0, content.size(), content.size(), 1);
+        }
+    }
     public OrderResponseDTO getOrderDTO(String orderId) {
         Orders order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -161,22 +182,23 @@ public class OrdersService {
     public OrderResponseDTO addOrderDetails(String orderId, List<OrderDetailRequestDTO> orderDetails) {
         Orders order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng với id: " + orderId));
-        BigDecimal amount = order.getAmount() != null ? order.getAmount() : BigDecimal.ZERO;
+        // Lấy danh sách OrderDetail đã tồn tại
+        List<OrderDetail> existingDetails = orderDetailRepository.findByOrderId(orderId);
+        // Map note -> OrderDetail để dễ tra cứu
+        Map<String, OrderDetail> noteToDetail = existingDetails.stream()
+                .filter(od -> od.getNote() != null && !od.getNote().isEmpty())
+                .collect(Collectors.toMap(OrderDetail::getNote, od -> od, (a, b) -> a));
         List<OrderDetail> newDetails = new ArrayList<>();
         for (OrderDetailRequestDTO detailDTO : orderDetails) {
             Dish dish = dishRepository.findById(detailDTO.getDishId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy món ăn với id: " + detailDTO.getDishId()));
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrder(order);
-            orderDetail.setDish(dish);
-            orderDetail.setQuantity(detailDTO.getQuantity());
             // Compose note with options
             String baseNote = detailDTO.getNote() != null ? detailDTO.getNote() : "";
             String optionNote = "";
             if (detailDTO.getOptionDetailIds() != null && !detailDTO.getOptionDetailIds().isEmpty()) {
                 List<String> optionContents = new ArrayList<>();
-                for (String optId : detailDTO.getOptionDetailIds()) {
-                    OptionDetail option = optionDetailRepository.findById(Long.valueOf(optId))
+                for (Long optId : detailDTO.getOptionDetailIds()) {
+                    OptionDetail option = optionDetailRepository.findById(optId)
                             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tuỳ chọn với id: " + optId));
                     optionContents.add(option.getContent());
                 }
@@ -188,21 +210,36 @@ public class OrdersService {
             } else if (!optionNote.isEmpty()) {
                 finalNote = optionNote;
             }
-            orderDetail.setNote(finalNote);
-            amount = amount.add(dish.getPrice().multiply(BigDecimal.valueOf(detailDTO.getQuantity())));
-            newDetails.add(orderDetail);
+            // Nếu note đã tồn tại thì tăng số lượng
+            if (noteToDetail.containsKey(finalNote)) {
+                OrderDetail existDetail = noteToDetail.get(finalNote);
+                existDetail.setQuantity(existDetail.getQuantity() + detailDTO.getQuantity());
+                newDetails.add(existDetail);
+            } else {
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrder(order);
+                orderDetail.setDish(dish);
+                orderDetail.setQuantity(detailDTO.getQuantity());
+                orderDetail.setNote(finalNote);
+                orderDetail.setStatus("PREPARING");
+                newDetails.add(orderDetail);
+            }
         }
-        // Save new order details
+        // Lưu lại các OrderDetail đã thay đổi hoặc mới
         for (OrderDetail detail : newDetails) {
-            detail.setStatus("PENDING");
             orderDetailRepository.save(detail);
         }
-        // Update order amount and totalAmount
+        // Tính lại tổng tiền
+        List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(order.getId());
+        BigDecimal amount = BigDecimal.ZERO;
+        for (OrderDetail od : allDetails) {
+            if (od.getDish() != null && od.getDish().getPrice() != null && od.getQuantity() != null) {
+                amount = amount.add(od.getDish().getPrice().multiply(BigDecimal.valueOf(od.getQuantity())));
+            }
+        }
         order.setAmount(amount);
         order.setTotalAmount(amount);
         ordersRepository.save(order);
-        // Lấy lại danh sách OrderDetail của order
-        List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(order.getId());
         List<KitchenOrderDetailDTO> detailDTOs = allDetails.stream()
                 .map(od -> KitchenOrderDetailMapper.mapToDTO(od, order))
                 .toList();
@@ -221,7 +258,7 @@ public class OrdersService {
 //                            tableId.equals(o.getSession().getTable().getId()))
 //                    .collect(java.util.stream.Collectors.toList());
 //        }
-//        // L���c theo status nếu có, nhưng luôn loại bỏ các order có status là "DONE"
+//        // Lọc theo status nếu có, nhưng luôn loại bỏ các order có status là "DONE"
 //        if (status != null && !status.isEmpty()) {
 //            orders = orders.stream()
 //                    .filter(o -> status.equalsIgnoreCase(o.getStatus()))
@@ -239,7 +276,7 @@ public class OrdersService {
 //        } else {
 //            orders.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 //        }
-//        // Lấy to��n bộ orderId và batch fetch order detail
+//        // Lấy toàn bộ orderId và batch fetch order detail
 //        List<String> orderIds = orders.stream().map(Orders::getId).collect(Collectors.toList());
 //        List<OrderDetail> allDetails = orderDetailRepository.findByOrderIdIn(orderIds);
 //        Map<String, List<OrderDetail>> detailsByOrderId = allDetails.stream().collect(Collectors.groupingBy(od -> od.getOrder().getId()));
@@ -250,9 +287,12 @@ public class OrdersService {
 //    }
 
     public Map<String, List<KitchenOrderDetailDTO>> getKitchenOrderDetailsGroupedByStatus() {
-        List<Orders> orders = ordersRepository.findAll();
+        // Lấy tất cả orders, loại bỏ những order có status là null hoặc "SERVED"
+        List<Orders> orders = ordersRepository.findAll().stream()
+            .filter(o -> o.getStatus() != null && !o.getStatus().equalsIgnoreCase("DONE"))
+            .toList();
         List<String> orderIds = orders.stream().map(Orders::getId).toList();
-        List<OrderDetail> allDetails = orderDetailRepository.findByOrderIdIn(orderIds);
+        List<OrderDetail> allDetails = orderDetailRepository.findByOrderIdIn(orderIds).stream().filter(od -> od.getStatus() != null && !od.getStatus().equalsIgnoreCase("SERVED")).toList();
         // Build a map of orderId to Orders for correct mapping
         Map<String, Orders> orderMap = orders.stream().collect(Collectors.toMap(Orders::getId, o -> o));
         // Map each OrderDetail to KitchenOrderDetailDTO using the correct Orders object

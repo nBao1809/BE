@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tnb.project.restaurant.entities.Session;
+import tnb.project.restaurant.mapper.SessionMapper;
 import tnb.project.restaurant.services.SessionService;
 import tnb.project.restaurant.DTO.SessionDTO;
 import java.util.List;
@@ -36,21 +37,21 @@ public class SessionController {
     }
 
     @PostMapping
-    ResponseEntity<Session> createSession(@RequestBody CreateSessionRequest request) {
+    ResponseEntity<SessionDTO> createSession(@RequestBody CreateSessionRequest request) {
         Session createdSession = sessionService.createSession(request.tableId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSession);
+        return ResponseEntity.status(HttpStatus.CREATED).body(SessionMapper.toDTO(createdSession));
     }
 
     @PatchMapping("/{sessionId}")
-    ResponseEntity<Session> updateSession(@PathVariable String sessionId, @RequestBody Session session) {
+    ResponseEntity<SessionDTO> updateSession(@PathVariable String sessionId, @RequestBody Session session) {
         Session updatedSession = sessionService.updateSession(sessionId, session);
-        return ResponseEntity.ok(updatedSession);
+        return ResponseEntity.ok(SessionMapper.toDTO(updatedSession));
     }
 
     @PostMapping("/{sessionId}/end")
-    public ResponseEntity<Session> endSession(@PathVariable String sessionId) {
+    public ResponseEntity<SessionDTO> endSession(@PathVariable String sessionId) {
         Session ended = sessionService.endSession(sessionId,null);
-        return ResponseEntity.ok(ended);
+        return ResponseEntity.ok(SessionMapper.toDTO(ended));
     }
 
     ResponseEntity<Void> deleteSession(@PathVariable String sessionId) {

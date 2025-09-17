@@ -18,18 +18,28 @@ public class VnpayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
     @Value("${vnpay.vnp_Url}")
-    public static String vnp_Url;
-
+    private String vnp_UrlValue;
     @Value("${vnpay.vnp_TmnCode}")
-    public static String vnp_TmnCode;
-
+    private String vnp_TmnCodeValue;
     @Value("${vnpay.secretKey}")
-    public static String secretKey;
-
+    private String secretKeyValue;
     @Value("${vnpay.vnp_ReturnUrl}")
+    private String vnp_ReturnUrlValue;
+
+    public static String vnp_Url;
+    public static String vnp_TmnCode;
+    public static String secretKey;
     public static String vnp_ReturnUrl;
 
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        vnp_Url = vnp_UrlValue;
+        vnp_TmnCode = vnp_TmnCodeValue;
+        secretKey = secretKeyValue;
+        vnp_ReturnUrl = vnp_ReturnUrlValue;
+    }
 
     public static String md5(String message) {
         String digest = null;

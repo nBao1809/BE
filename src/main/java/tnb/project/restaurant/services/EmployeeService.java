@@ -1,7 +1,10 @@
 package tnb.project.restaurant.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import tnb.project.restaurant.DTO.PageResponse;
 import tnb.project.restaurant.DTO.requests.EmployeeCreateDTO;
 import tnb.project.restaurant.DTO.EmployeeDTO;
 import tnb.project.restaurant.entities.Employee;
@@ -91,5 +94,16 @@ public class EmployeeService {
             throw new IllegalArgumentException("Tên đăng nhập hoặc mật khẩu không đúng");
         }
         return employee;
+    }
+
+    public PageResponse<EmployeeDTO> getEmployeesPage(Integer page, Integer size) {
+        if (page != null && size != null) {
+            Page<Employee> employeePage = employeeRepo.findAll(PageRequest.of(page, size));
+            List<EmployeeDTO> content = employeePage.getContent().stream().map(EmployeeDTO::new).collect(Collectors.toList());
+            return new PageResponse<>(content, employeePage.getNumber(), employeePage.getSize(), employeePage.getTotalElements(), employeePage.getTotalPages());
+        } else {
+            List<EmployeeDTO> employees = employeeRepo.findAll().stream().map(EmployeeDTO::new).collect(Collectors.toList());
+            return new PageResponse<>(employees, 0, employees.size(), employees.size(), 1);
+        }
     }
 }

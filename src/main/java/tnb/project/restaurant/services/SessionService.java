@@ -1,5 +1,6 @@
 package tnb.project.restaurant.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tnb.project.restaurant.entities.Session;
 import tnb.project.restaurant.DTO.SessionDTO;
@@ -16,6 +17,7 @@ import tnb.project.restaurant.entities.Tables;
 import tnb.project.restaurant.entities.Customer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+@Slf4j
 @Service
 public class SessionService {
     private final SessionRepository sessionRepo;
@@ -112,6 +114,7 @@ public class SessionService {
             tablesRepo.save(table);
         }
         // Gửi thông báo WS cho thu ngân
+        log.info("Ending session with id: /topic/session/"+sessionId, sessionId);
         messagingTemplate.convertAndSend("/topic/cashier/session", SessionMapper.toDTO(endedSession));
         messagingTemplate.convertAndSend("/topic/session/" + sessionId, SessionMapper.toDTO(endedSession));
         return endedSession;

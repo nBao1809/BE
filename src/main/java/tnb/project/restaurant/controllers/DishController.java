@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tnb.project.restaurant.DTO.DishListDTO;
+import tnb.project.restaurant.DTO.PageResponse;
 import tnb.project.restaurant.DTO.requests.UpdateStatusDTO;
 import tnb.project.restaurant.entities.Dish;
 import tnb.project.restaurant.services.DishService;
@@ -22,10 +23,17 @@ public class DishController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DishListDTO>> getDishes(@RequestParam(value = "categoryId", required = false) Long categoryId,
-                                                      @RequestParam(value = "q", required = false) String keyword) {
-        List<DishListDTO> dishes = dishService.filterDishesDTO(categoryId, keyword);
-        return ResponseEntity.ok(dishes);
+    public ResponseEntity<?> getDishes(@RequestParam(value = "categoryId", required = false) Long categoryId,
+                                      @RequestParam(value = "q", required = false) String keyword,
+                                      @RequestParam(value = "page", required = false) Integer page,
+                                      @RequestParam(value = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            PageResponse<DishListDTO> paged = dishService.filterDishesPageDTO(categoryId, keyword, page, size);
+            return ResponseEntity.ok(paged);
+        } else {
+            List<DishListDTO> list = dishService.filterDishesDTO(categoryId, keyword);
+            return ResponseEntity.ok(list);
+        }
     }
 
     @GetMapping("/{id}")

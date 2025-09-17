@@ -5,9 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-import tnb.project.restaurant.DTO.CashPaymentRequestDTO;
+import tnb.project.restaurant.DTO.PaymentRequestDTO;
 import tnb.project.restaurant.DTO.SessionNotifyRequestDTO;
-import tnb.project.restaurant.DTO.VnpayPaymentRequestDTO;
 import tnb.project.restaurant.entities.Payment;
 import tnb.project.restaurant.DTO.PaymentDTO;
 import tnb.project.restaurant.services.PaymentService;
@@ -86,14 +85,14 @@ public class PaymentController {
     }
 
     @PostMapping("/cash")
-    public ResponseEntity<?> payByCash(@RequestBody CashPaymentRequestDTO cashPaymentRequestDTO) {
+    public ResponseEntity<?> payByCash(@RequestBody PaymentRequestDTO cashPaymentRequestDTO) {
 
         PaymentDTO payment= paymentService.processCashPayment(cashPaymentRequestDTO);
         return ResponseEntity.ok(payment);
     }
 
-    @PostMapping("/pay")
-    public ResponseEntity<?> createQRPayment(@RequestBody VnpayPaymentRequestDTO paymentDTO, HttpServletRequest request) {
+    @PostMapping("/qr")
+    public ResponseEntity<?> createQRPayment(@RequestBody PaymentRequestDTO paymentDTO, HttpServletRequest request) {
         try {
             String paymentUrl = paymentService.processQRPayment(paymentDTO, request);
             return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
@@ -102,7 +101,10 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/vnpay-ipn")
+
+
+
+    @PostMapping("/vnpay-ipn")
     public ResponseEntity<String> vnpayIpn(HttpServletRequest request) {
         String result = paymentService.processVnpayIpn(request);
         return ResponseEntity.ok().body(result);
@@ -114,7 +116,9 @@ public class PaymentController {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("sessionId không hợp lệ");
         }
-        messagingTemplate.convertAndSend("/topic/cashier/session-payment", request);
+        messagingTemplate.convertAndSend("/topic/cashier/table-payment", request);
         return ResponseEntity.ok("SessionId đã được gửi tới cashier qua WebSocket");
     }
+
+
 }

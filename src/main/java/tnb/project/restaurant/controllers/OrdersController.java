@@ -14,6 +14,7 @@ import tnb.project.restaurant.DTO.requests.OrderDetailRequestDTO;
 import tnb.project.restaurant.DTO.responses.KitchenOrderResponseDTO;
 import tnb.project.restaurant.DTO.responses.KitchenOrderDetailDTO;
 import tnb.project.restaurant.DTO.requests.UpdateStatusDTO;
+import tnb.project.restaurant.DTO.PageResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,15 @@ public class OrdersController {
 
 
     @GetMapping
-    ResponseEntity<List<OrderResponseDTO>> getOrders() {
-        List<OrderResponseDTO> orders = ordersService.getOrderDTOs();
-        return ResponseEntity.ok(orders);
+    ResponseEntity<?> getOrders(@RequestParam(value = "page", required = false) Integer page,
+                                @RequestParam(value = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            PageResponse<OrderResponseDTO> paged = ordersService.getOrderPageDTOs(page, size);
+            return ResponseEntity.ok(paged);
+        } else {
+            List<OrderResponseDTO> orders = ordersService.getOrderDTOs();
+            return ResponseEntity.ok(orders);
+        }
     }
 
     @GetMapping("/{orderId}")

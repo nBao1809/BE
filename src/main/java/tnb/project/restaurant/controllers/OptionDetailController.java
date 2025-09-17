@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tnb.project.restaurant.DTO.OptionDetailDTO;
 import tnb.project.restaurant.entities.OptionDetail;
 import tnb.project.restaurant.services.OptionDetailService;
 import java.util.List;
@@ -30,13 +31,13 @@ public class OptionDetailController {
     }
 
     @PostMapping
-    ResponseEntity<OptionDetail> createOptionDetail(@RequestBody OptionDetail optionDetail) {
+    ResponseEntity<OptionDetail> createOptionDetail(@RequestBody OptionDetailDTO optionDetail) {
         OptionDetail createdOptionDetail = optionDetailService.createOptionDetail(optionDetail);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOptionDetail);
     }
 
     @PatchMapping("/{optionDetailId}")
-    ResponseEntity<OptionDetail> updateOptionDetail(@PathVariable Long optionDetailId, @RequestBody OptionDetail optionDetail) {
+    ResponseEntity<OptionDetail> updateOptionDetail(@PathVariable Long optionDetailId, @RequestBody OptionDetailDTO optionDetail) {
         OptionDetail updatedOptionDetail = optionDetailService.updateOptionDetail(optionDetailId, optionDetail);
         return ResponseEntity.ok(updatedOptionDetail);
     }

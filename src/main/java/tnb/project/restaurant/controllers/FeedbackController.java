@@ -20,9 +20,13 @@ public class FeedbackController {
     }
 
     @GetMapping
-    ResponseEntity<List<FeedbackResponseDTO>> getFeedbacks() {
-        List<FeedbackResponseDTO> feedbacks = feedbackService.getFeedbackDTOs();
-        return ResponseEntity.ok(feedbacks);
+    ResponseEntity<?> getFeedbacks(@RequestParam(value = "page", required = false) Integer page,
+                                   @RequestParam(value = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            return ResponseEntity.ok(feedbackService.getFeedbacksPage(page, size));
+        } else {
+            return ResponseEntity.ok(feedbackService.getFeedbackDTOs());
+        }
     }
 
     @GetMapping("/{feedbackId}")

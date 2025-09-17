@@ -2,9 +2,10 @@ package tnb.project.restaurant.services;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import tnb.project.restaurant.DTO.CashPaymentRequestDTO;
-import tnb.project.restaurant.DTO.VnpayPaymentRequestDTO;
+import tnb.project.restaurant.DTO.PaymentRequestDTO;
 import tnb.project.restaurant.config.VnpayConfig;
 import tnb.project.restaurant.entities.*;
 
@@ -200,7 +201,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentDTO processCashPayment(CashPaymentRequestDTO cashDTO) {
+    public PaymentDTO processCashPayment(PaymentRequestDTO cashDTO) {
         // Validate đầu vào
         if (cashDTO == null) throw new IllegalArgumentException("Dữ liệu thanh toán không được để trống");
         if (cashDTO.getOrderId() == null || cashDTO.getOrderId().isEmpty())
@@ -254,7 +255,7 @@ public class PaymentService {
         return PaymentMapper.toDTO(payment);
     }
 
-    public String processQRPayment(VnpayPaymentRequestDTO vnpayDTO, HttpServletRequest request) throws IOException {
+    public String processQRPayment(PaymentRequestDTO vnpayDTO, HttpServletRequest request) throws IOException {
         // Validate đầu vào
         if (vnpayDTO == null) throw new IllegalArgumentException("Dữ liệu thanh toán không được để trống");
         if (vnpayDTO.getOrderId() == null || vnpayDTO.getOrderId().isEmpty())
@@ -296,12 +297,12 @@ public class PaymentService {
         ordersRepository.save(order);
 
 
-        // Sinh URL QR như cũ
+        // Sinh URL QR
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";
         long amount = Integer.parseInt(String.valueOf(vnpayDTO.getTotalAmount())) * 100L;
-        String bankCode = vnpayDTO.getBankCode();//VNPAYQR
+        String bankCode = "VNPAYQR";
 
         String vnp_TxnRef = vnpayDTO.getOrderId();
         String vnp_IpAddr = VnpayConfig.getIpAddress(request);
@@ -315,19 +316,13 @@ public class PaymentService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
 
-        if (bankCode != null && !bankCode.isEmpty()) {
-            vnp_Params.put("vnp_BankCode", bankCode);
-        }
+//        vnp_Params.put("vnp_BankCode", bankCode);
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan hoa don:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", orderType);
 
-        String locate = vnpayDTO.getLanguage();
-        if (locate != null && !locate.isEmpty()) {
-            vnp_Params.put("vnp_Locale", locate);
-        } else {
-            vnp_Params.put("vnp_Locale", "vn");
-        }
+        String locate = "vn";
+        vnp_Params.put("vnp_Locale", locate);
         vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
@@ -336,7 +331,7 @@ public class PaymentService {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
+        cld.add(Calendar.MINUTE, 5);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
@@ -367,6 +362,7 @@ public class PaymentService {
         String vnp_SecureHash = VnpayConfig.hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = VnpayConfig.vnp_PayUrl + "?" + queryUrl;
+        System.out.println("URL: " + paymentUrl);
         // Trả về trực tiếp paymentUrl thay vì vnp_Params
         return paymentUrl;
     }
@@ -451,6 +447,7 @@ public class PaymentService {
                             // Kết thúc session
                             sessionService.endSession(order.getSession().getId(), customer.getId());
                             }
+                            sessionService.endSession(order.getSession().getId(), null);
                             return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
                         } else {
                             // Here Code update PaymnentStatus = 2 into your Database

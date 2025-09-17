@@ -11,6 +11,11 @@ public class OrderDetailMapper {
         dto.setQuantity(orderDetail.getQuantity());
         dto.setNote(orderDetail.getNote());
         dto.setStatus(orderDetail.getStatus());
+        if (orderDetail.getDish() != null && orderDetail.getDish().getPrice() != null) {
+            dto.setPrice(orderDetail.getDish().getPrice());
+        } else {
+            dto.setPrice(null);
+        }
         return dto;
     }
 }

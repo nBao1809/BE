@@ -10,7 +10,7 @@ import java.util.List;
 public class OrderDetailRequestDTO {
     private Long dishId;
     private int quantity;
-    private List<String> optionDetailIds;
+    private List<Long> optionDetailIds;
     private String note;
 
 }

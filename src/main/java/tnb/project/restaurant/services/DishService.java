@@ -1,5 +1,7 @@
 package tnb.project.restaurant.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import tnb.project.restaurant.entities.Dish;
 import tnb.project.restaurant.repositorires.DishRepository;
@@ -8,7 +10,9 @@ import tnb.project.restaurant.repositorires.OptionDetailRepository;
 import tnb.project.restaurant.entities.OptionDetail;
 import tnb.project.restaurant.entities.Category;
 import tnb.project.restaurant.DTO.DishListDTO;
+import tnb.project.restaurant.DTO.PageResponse;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -137,6 +141,40 @@ public class DishService {
                 dish.getCategory()
             ))
             .collect(Collectors.toList());
+    }
+
+    public PageResponse<DishListDTO> filterDishesPageDTO(Long categoryId, String keyword, Integer page, Integer size) {
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Dish> dishPage = dishRepo.findAll(pageable);
+            List<DishListDTO> content = dishPage.getContent().stream()
+                .filter(dish -> (categoryId == null || (dish.getCategory() != null && categoryId.equals(dish.getCategory().getId())))
+                    && (keyword == null || keyword.isBlank() || (dish.getName() != null && dish.getName().toLowerCase().contains(keyword.toLowerCase()))))
+                .map(dish -> new DishListDTO(
+                    dish.getId(),
+                    dish.getName(),
+                    dish.getPrice(),
+                    dish.getImageUrl(),
+                    dish.getStatus(),
+                    dish.getCategory()
+                ))
+                .collect(Collectors.toList());
+            return new PageResponse<>(content, dishPage.getNumber(), dishPage.getSize(), dishPage.getTotalElements(), dishPage.getTotalPages());
+        } else {
+            List<DishListDTO> content = dishRepo.findAll().stream()
+                .filter(dish -> (categoryId == null || (dish.getCategory() != null && categoryId.equals(dish.getCategory().getId())))
+                    && (keyword == null || keyword.isBlank() || (dish.getName() != null && dish.getName().toLowerCase().contains(keyword.toLowerCase()))))
+                .map(dish -> new DishListDTO(
+                    dish.getId(),
+                    dish.getName(),
+                    dish.getPrice(),
+                    dish.getImageUrl(),
+                    dish.getStatus(),
+                    dish.getCategory()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new PageResponse<>(content, 0, content.size(), content.size(), 1);
+        }
     }
 
     public Dish updateStatus(Long dishId, String status) {
