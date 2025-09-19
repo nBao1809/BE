@@ -1,0 +1,67 @@
+# Danh sách các thư viện sử dụng trong project
+
+1. **Spring Boot**
+   - spring-boot-starter-web
+   - spring-boot-starter-data-jpa
+   - spring-boot-starter-security
+   - spring-boot-starter-websocket
+   - spring-boot-starter-tomcat
+   - spring-boot-starter-json
+   - spring-boot-starter-logging
+   - spring-boot-starter-test (cho test)
+   - spring-boot-autoconfigure
+   - spring-boot
+
+2. **Spring Data JPA**
+   - org.springframework.data.jpa.repository.JpaRepository
+   - org.springframework.stereotype.Repository
+
+3. **Spring Security**
+   - org.springframework.security.*
+
+4. **Lombok**
+   - lombok.AllArgsConstructor
+   - lombok.Getter
+   - lombok.Setter
+   - lombok.Data
+   - lombok.NoArgsConstructor
+
+5. **Jakarta Servlet**
+   - jakarta.servlet.*
+
+6. **Jakarta Persistence**
+   - jakarta.persistence.*
+
+7. **Cloudinary**
+   - com.cloudinary.*
+
+8. **Nimbus JOSE JWT**
+   - com.nimbusds.jose.*
+   - com.nimbusds.jwt.*
+
+9. **Jackson**
+   - com.fasterxml.jackson.annotation.JsonUnwrapped
+
+10. **HikariCP** (kết nối database)
+    - com.zaxxer.hikari.*
+
+11. **Hibernate**
+    - org.hibernate.*
+
+12. **JUnit** (cho test)
+    - org.junit.*
+
+13. **SLF4J, Logback, Log4j** (logging)
+    - org.slf4j.*
+    - ch.qos.logback.*
+    - org.apache.logging.log4j.*
+
+14. **MySQL Connector/J**
+    - com.mysql.cj.jdbc.*
+
+15. **Các thư viện Java chuẩn**
+    - java.util.*
+    - java.time.*
+    - java.io.*
+    - java.sql.*
+

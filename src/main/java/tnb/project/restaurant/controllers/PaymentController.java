@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import tnb.project.restaurant.DTO.PaymentRequestDTO;
 import tnb.project.restaurant.DTO.SessionNotifyRequestDTO;
 import tnb.project.restaurant.entities.Payment;
@@ -15,6 +16,7 @@ import tnb.project.restaurant.DTO.requests.UpdateStatusDTO;
 
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +72,10 @@ public class PaymentController {
     @GetMapping("/statistics/revenue")
     public ResponseEntity<List<RevenueStatisticDTO>> getRevenueStatistics(
             @RequestParam String type,
-            @RequestParam String from,
-            @RequestParam String to) {
-        LocalDateTime fromDate = LocalDateTime.parse(from);
-        LocalDateTime toDate = LocalDateTime.parse(to);
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to) {
+        LocalDateTime fromDate = from.atStartOfDay();
+        LocalDateTime toDate = to.atTime(23, 59, 59);
         List<RevenueStatisticDTO> result;
         switch (type.toLowerCase()) {
             case "day" -> result = paymentService.getRevenueByDay(fromDate, toDate);
