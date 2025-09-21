@@ -184,10 +184,14 @@ public class OrdersService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng với id: " + orderId));
         // Lấy danh sách OrderDetail đã tồn tại
         List<OrderDetail> existingDetails = orderDetailRepository.findByOrderId(orderId);
-        // Map note -> OrderDetail để dễ tra cứu
-        Map<String, OrderDetail> noteToDetail = existingDetails.stream()
-                .filter(od -> od.getNote() != null && !od.getNote().isEmpty())
-                .collect(Collectors.toMap(OrderDetail::getNote, od -> od, (a, b) -> a));
+        // Map composite key (dishId + note) -> OrderDetail để dễ tra cứu
+        Map<String, OrderDetail> keyToDetail = existingDetails.stream()
+                .filter(od -> od.getDish() != null && od.getNote() != null)
+                .collect(Collectors.toMap(
+                    od -> od.getDish().getId() + "|" + od.getNote(),
+                    od -> od,
+                    (a, b) -> a
+                ));
         List<OrderDetail> newDetails = new ArrayList<>();
         for (OrderDetailRequestDTO detailDTO : orderDetails) {
             Dish dish = dishRepository.findById(detailDTO.getDishId())
@@ -210,9 +214,11 @@ public class OrdersService {
             } else if (!optionNote.isEmpty()) {
                 finalNote = optionNote;
             }
-            // Nếu note đã tồn tại thì tăng số lượng
-            if (noteToDetail.containsKey(finalNote)) {
-                OrderDetail existDetail = noteToDetail.get(finalNote);
+            // Tạo composite key
+            String compositeKey = dish.getId() + "|" + finalNote;
+            // Nếu key đã tồn tại thì tăng số lượng
+            if (keyToDetail.containsKey(compositeKey)) {
+                OrderDetail existDetail = keyToDetail.get(compositeKey);
                 existDetail.setQuantity(existDetail.getQuantity() + detailDTO.getQuantity());
                 newDetails.add(existDetail);
             } else {

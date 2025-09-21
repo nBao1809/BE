@@ -6,6 +6,7 @@ import tnb.project.restaurant.entities.OrderDetail;
 public class OrderDetailMapper {
     public static OrderDetailResponseDTO mapToDTO(OrderDetail orderDetail) {
         OrderDetailResponseDTO dto = new OrderDetailResponseDTO();
+        dto.setId(orderDetail.getId());
         dto.setDishId(orderDetail.getDish().getId());
         dto.setDishName(orderDetail.getDish().getName());
         dto.setQuantity(orderDetail.getQuantity());

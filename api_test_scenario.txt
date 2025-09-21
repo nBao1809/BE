@@ -1,0 +1,21 @@
+
+
+
+2. Kitchen (Bếp)
+3. Cashier (Thu ngân)
+---------------------
+Các bước kiểm thử dành cho thu ngân:
+- Đăng nhập:
+  + POST /api/auth/login
+  + Body: { "username": "cashier1", "password": "123456" }
+- Tạo session mới:
+  + POST /api/sessions
+  + Body: { "tableId": 1 }
+- Tạo Order mới:
+  + POST /api/orders
+  + Body: OrderRequestDTO
+    Ví dụ: { "sessionId": 1, "customerId": 1, "orderDetails": [ { "dishId": 2, "quantity": 1 } ] }
+- Gửi yêu cầu thanh toán:
+  + POST /api/payments/cash
+  + Body: PaymentRequestDTO
+    Ví dụ: { "orderId": 1, "amount": 100000, "method": "CASH", "customerId": 1 }

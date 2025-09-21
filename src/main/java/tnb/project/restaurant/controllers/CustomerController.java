@@ -22,7 +22,7 @@ public class CustomerController {
 
     @GetMapping
     ResponseEntity<?> getCustomers(@RequestParam(value = "page", required = false) Integer page,
-                                   @RequestParam(value = "size", required = false) Integer size) {
+                                                @RequestParam(value = "size", required = false) Integer size) {
         if (page != null && size != null) {
             return ResponseEntity.ok(customerService.getCustomersPage(page, size));
         } else {
